@@ -33,7 +33,7 @@ type App struct {
 
 type appKey struct{}
 
-func (a *App)Stop() error {
+func (a *App) Stop() error {
 	fmt.Println("Stopping....")
 	return nil
 }
@@ -46,20 +46,21 @@ func (a *App) Run() error {
 		return err
 	}
 	ctx := NewContext(a.ctx, a)
+	// https://www.fullstory.com/blog/why-errgroup-withcontext-in-golang-server-handlers/
 	eg, ctx := errgroup.WithContext(ctx)
 	wg := sync.WaitGroup{}
 	for _, srv := range a.opts.servers {
-		srv := srv
+		server := srv
 		eg.Go(func() error {
-			<- ctx.Done() // wait for stop signal
+			<-ctx.Done() // wait for stop signal
 			sCtx, sCancel := context.WithTimeout(NewContext(context.Background(), a), a.opts.stopTimeout)
 			defer sCancel()
-			return srv.Stop(sCtx)
+			return server.Stop(sCtx)
 		})
 		wg.Add(1)
 		eg.Go(func() error {
 			wg.Done()
-			return srv.Start(ctx)
+			return server.Start(ctx)
 		})
 	}
 	wg.Wait()
@@ -78,9 +79,10 @@ func (a *App) Run() error {
 	eg.Go(func() error {
 		for {
 			select {
-			case <- ctx.Done():
+			case <-ctx.Done():
 				return ctx.Err()
-			case <- c:
+			case <-c:
+				fmt.Println("Exited")
 				if err := a.Stop(); err != nil {
 					return err
 				}
@@ -121,7 +123,6 @@ func New(opts ...Option) *App {
 	}
 }
 
-
 func (a *App) ID() string {
 	return a.opts.id
 }
@@ -146,7 +147,7 @@ func (a *App) Endpoint() []string {
 }
 
 func (a *App) buildInstance() (*registry.ServiceInstance, error) {
-	endpoints := make([]string,  0)
+	endpoints := make([]string, 0)
 	for _, e := range a.opts.endpoints {
 		endpoints = append(endpoints, e.String())
 	}
@@ -162,10 +163,10 @@ func (a *App) buildInstance() (*registry.ServiceInstance, error) {
 		}
 	}
 	return &registry.ServiceInstance{
-		ID: a.opts.id,
-		Name: a.opts.name,
-		Version: a.opts.version,
-		Metadata: a.opts.metadata,
+		ID:        a.opts.id,
+		Name:      a.opts.name,
+		Version:   a.opts.version,
+		Metadata:  a.opts.metadata,
 		Endpoints: endpoints,
 	}, nil
 }
