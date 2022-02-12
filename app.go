@@ -34,7 +34,19 @@ type App struct {
 type appKey struct{}
 
 func (a *App) Stop() error {
-	fmt.Println("Stopping....")
+	a.lk.Lock()
+	instance := a.instance
+	a.lk.Unlock()
+	if a.opts.registrar != nil && instance != nil {
+		ctx, cancel := context.WithTimeout(a.opts.ctx, a.opts.registrarTimeout)
+		defer cancel()
+		if err := a.opts.registrar.Deregister(ctx, instance); err != nil {
+			return err
+		}
+	}
+	if a.cancel != nil {
+		a.cancel()
+	}
 	return nil
 }
 
