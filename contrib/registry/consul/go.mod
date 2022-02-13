@@ -6,3 +6,7 @@ require (
 	github.com/hashicorp/consul/api v1.12.0
 	github.com/tiennampham23/kratos-cloned v0.0.0-20220206150855-a6127a9611fd
 )
+
+replace (
+	github.com/tiennampham23/kratos-cloned => ../../../
+)
