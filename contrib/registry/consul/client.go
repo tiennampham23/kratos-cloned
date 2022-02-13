@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/consul/api"
+	"github.com/tiennampham23/kratos-cloned/log"
 	"github.com/tiennampham23/kratos-cloned/registry"
 	"net"
 	"net/url"
@@ -117,6 +118,7 @@ func (c *Client) Register(_ context.Context, svc *registry.ServiceInstance, enab
 			time.Sleep(time.Second)
 			err := c.cli.Agent().UpdateTTL("service:" + svc.ID, "pass", "pass")
 			if err != nil {
+				log.Errorf("[Consul] Update TTL heartbeat to consul failed with: %v", err)
 			}
 			ticker := time.NewTicker(time.Second * time.Duration(c.healthCheckInterval))
 			defer ticker.Stop()
@@ -125,7 +127,7 @@ func (c *Client) Register(_ context.Context, svc *registry.ServiceInstance, enab
 				case <-ticker.C:
 					err := c.cli.Agent().UpdateTTL("service:" + svc.ID, "pass", "pass")
 					if err != nil {
-
+						log.Errorf("[Consul] Update TTL heartbeat to consul failed with: %v", err)
 					}
 				case <- c.ctx.Done():
 					return

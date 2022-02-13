@@ -105,7 +105,7 @@ func (r *Registry) resolve(set *serviceSet) error {
 	services, idx, err := r.cli.Service(ctx, set.serviceName, 0, true)
 	cancel()
 	if err != nil {
-		return nil
+		return err
 	} else if len(services) > 0 {
 		set.broadcast(services)
 	}
