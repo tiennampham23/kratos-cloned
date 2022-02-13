@@ -1,4 +1,4 @@
-module github.com/tiennampham23/kratos-cloned/contrib/zap
+module github.com/tiennampham23/kratos-cloned/contrib/log/zap
 
 go 1.17
 
